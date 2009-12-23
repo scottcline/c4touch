@@ -1,0 +1,7 @@
+#labels telnet,control4
+The userid and password required to login to your Control4 controller via telnet.
+
+username:root
+password:t0talc0ntr0l4!
+
+Note that the 0s above are zeros and not the letter oh.
