@@ -17,6 +17,12 @@ It appears to send these packets not only for itself, but also for other control
 
 So for discovery, we could just look for packets like that, grab the source IP, and contact it on port 5020.
 
+= Details =
+
+Once the connection is established, we can use TCP on port 5020 to talk to the director.  These are not HTTP requests, but rather raw requests and responses.  
+
+In the following examples, each of the requests is followed by a null byte (^@ on most Unixes).
+
 Requests appear to have the general form:
 
 {{{
@@ -28,12 +34,6 @@ Requests appear to have the general form:
 }}}
 
 where FUNCTION is the name of the particular function call, NAME is the name of a parameter, and VALUE is the value of that parameter (which could be an XML block, as in the SendToDeviceAsync method.)
-
-= Details =
-
-Once the connection is established, we can use TCP on port 5020 to talk to the director.  These are not HTTP requests, but rather raw requests and responses.  
-
-In the following examples, each of the requests is followed by a null byte (^@ on most Unixes).
 
 Here are some of the requests:
 
