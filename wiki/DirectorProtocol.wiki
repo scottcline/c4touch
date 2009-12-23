@@ -1,0 +1,94 @@
+#summary Summarizes what we know of the protocol
+
+= Introduction =
+
+Devices discover the director and other entities in the C4 system using [http://quimby.gnus.org/internet-drafts/draft-cai-ssdp-v1-03.txt SSDP].  The director multicasts packets that look like this:
+
+{{{
+XNOTIFY * HTTP/1.1
+HOST:239.255.255.250:1900
+NTS: ssdp:alive
+ST: c4:director
+USN: c4:director:MediaController-000FFF0B1434
+CACHE-CONTROL: max-age = 5000, no-cache="Ext"
+}}}
+
+It appears to send these packets not only for itself, but also for other controllers in the system.  The packet contains the identity of the director, but only the source address identifies the controller's address.
+
+So for discovery, we could just look for packets like that, grab the source IP, and contact it on port 5020.
+
+= Details =
+
+Once the connection is established, we can use TCP on port 5020 to talk to the director.  These are not HTTP requests, but rather raw requests and responses.  
+
+In the following examples, each of the requests is followed by a null byte (^@ on most Unixes).
+
+Here are some of the requests:
+
+==GetVersionInfo==
+
+Gets the version info from the director.  Not required, but could be useful.
+
+{{{
+<c4soap name="GetVersionInfo" async="False" />
+}}}
+
+The response looks like:
+
+{{{
+<c4soap name="GetVersionInfo" result="1">
+  <versions>
+    <version name="Director" version="1.3.2.438" buildtype="" builddate="Feb 19 2008" buildtime="20:49:26"/>
+    <version name="MediaManager" version="1.3.2.438" buildtype="" builddate="Feb 19 2008" buildtime="21:01:48"/>
+  </versions>
+</c4soap>
+}}}
+
+==EnableEvents==
+
+Apparently enables the asynchronous sending of events over this connection.
+
+{{{
+<c4soap name="EnableEvents" async="True">
+  <param name="enable" type="bool">1</param>
+</c4soap>
+}}}
+
+==GetItems==
+
+This is the big "get me the configuration" request.  The response is a huge (1.2MB on one system) blob of XML that contains the configuration of the system.
+
+{{{
+<c4soap name="GetItems" async="False">
+  <param name="filter" type="number">0</param>
+</c4soap>
+}}}
+
+==SendToDeviceAsync==
+
+Sends a command to a device.  So, for example, it will turn lights on and off.
+
+This turns the dimmer with id 79 to 50%:
+
+{{{
+<c4soap name="SendToDeviceAsync" async="True">
+  <param name="iddevice" type="number">79</param>
+  <param name="data" type="string">
+    <devicecommand owneridtype="" owneriditem="-1">
+      <command>SET_LEVEL</command>
+      <params>
+        <param>
+          <name>LEVEL</name>
+          <value type="INTEGER">
+            <static>50</static>
+          </value>
+        </param>
+      </params>
+    </devicecommand>
+  </param>
+</c4soap>
+}}}
+
+Changing the 50 to 0 above turns off the lights.
+
+There is no response to this command.
